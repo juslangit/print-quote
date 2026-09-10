@@ -1,0 +1,1041 @@
+<title>Instant Print Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+  :root {
+    --ground:      #E9EBEC;
+    --surface:     #FFFFFF;
+    --surface-2:   #DFE3E5;
+    --ink:         #191D21;
+    --ink-soft:    #4E585F;
+    --ink-faint:   #7C878F;
+    --border:      #CBD2D6;
+    --border-firm: #A9B4BA;
+    --accent:      #C2410C;
+    --accent-soft: #FBE8DD;
+    --cyan:        #0E6F80;
+    --cyan-soft:   #DEEFF2;
+    --good:        #15803D;
+    --good-soft:   #DEF1E5;
+    --warn:        #B45309;
+    --warn-soft:   #FAEDDA;
+    --bad:         #B91C1C;
+    --bad-soft:    #FAE5E5;
+    --viewport:    #D5DADD;
+    --shadow:      0 1px 2px rgba(25,29,33,.06), 0 8px 24px rgba(25,29,33,.05);
+
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #14171A;
+      --surface:     #1C2126;
+      --surface-2:   #262C33;
+      --ink:         #E8ECEF;
+      --ink-soft:    #9AA6AE;
+      --ink-faint:   #74818A;
+      --border:      #303840;
+      --border-firm: #47525B;
+      --accent:      #FF7A3D;
+      --accent-soft: #2E1B12;
+      --cyan:        #4EC4D8;
+      --cyan-soft:   #13272C;
+      --good:        #4ADE80;
+      --good-soft:   #12271A;
+      --warn:        #E0A458;
+      --warn-soft:   #2A2015;
+      --bad:         #F87171;
+      --bad-soft:    #2B1717;
+      --viewport:    #101316;
+      --shadow:      0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #14171A;
+    --surface:     #1C2126;
+    --surface-2:   #262C33;
+    --ink:         #E8ECEF;
+    --ink-soft:    #9AA6AE;
+    --ink-faint:   #74818A;
+    --border:      #303840;
+    --border-firm: #47525B;
+    --accent:      #FF7A3D;
+    --accent-soft: #2E1B12;
+    --cyan:        #4EC4D8;
+    --cyan-soft:   #13272C;
+    --good:        #4ADE80;
+    --good-soft:   #12271A;
+    --warn:        #E0A458;
+    --warn-soft:   #2A2015;
+    --bad:         #F87171;
+    --bad-soft:    #2B1717;
+    --viewport:    #101316;
+    --shadow:      0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 14.5px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+  p { margin: 0; }
+  button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+  .label {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: .13em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---------- header ---------- */
+
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    padding-block: 14px;
+    padding-inline: 22px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
+  }
+  .logo { display: flex; align-items: center; gap: 11px; }
+  .logo__mark {
+    width: 34px; height: 34px; flex: none; border-radius: 8px;
+    background: var(--ink); color: var(--surface);
+    display: grid; place-items: center;
+  }
+  :root[data-theme="dark"] .logo__mark { background: var(--accent); color: #14171A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo__mark { background: var(--accent); color: #14171A; } }
+  .logo__name { font-family: var(--display); font-size: 16.5px; font-weight: 700; line-height: 1.15; }
+  .logo__tag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .header__spacer { flex: 1 1 40px; }
+  .header__note { font-size: 12.5px; color: var(--ink-soft); max-width: 40ch; }
+
+  /* ---------- layout ---------- */
+
+  .wrap { padding-block: 22px 60px; padding-inline: 22px; max-width: 1240px; margin-inline: auto; }
+  @media (max-width: 600px) { .wrap { padding-inline: 14px; } header { padding-inline: 14px; } }
+
+  .bench { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr); gap: 16px; align-items: start; }
+  @media (max-width: 940px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel__head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 11px 15px; border-bottom: 1px solid var(--border); background: var(--surface);
+  }
+  .panel__body { padding: 15px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ---------- viewport ---------- */
+
+  .stage { position: relative; background: var(--viewport); aspect-ratio: 4 / 3; max-width: 100%; }
+  @media (max-width: 500px) { .stage { aspect-ratio: 1 / 1; } }
+  .stage canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+  .stage canvas:active { cursor: grabbing; }
+
+  .stage__hint {
+    position: absolute; left: 12px; bottom: 10px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); pointer-events: none;
+  }
+  .stage__file {
+    position: absolute; left: 12px; top: 10px; right: 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-soft);
+    pointer-events: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .drop {
+    position: absolute; inset: 0; display: none;
+    place-items: center; text-align: center;
+    background: var(--accent-soft); border: 2px dashed var(--accent);
+    color: var(--accent); font-weight: 600; font-size: 15px;
+  }
+  .stage.is-over .drop { display: grid; }
+
+  .stage__err {
+    position: absolute; inset: auto 12px 34px 12px;
+    background: var(--bad-soft); color: var(--bad); border: 1px solid var(--bad);
+    border-radius: 8px; padding: 8px 11px; font-size: 12.5px;
+  }
+
+  /* ---------- measurements strip ---------- */
+
+  .meas { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 1px; background: var(--border); border-top: 1px solid var(--border); }
+  .meas > div { background: var(--surface); padding: 10px 13px; display: flex; flex-direction: column; gap: 1px; }
+  .meas__v { font-family: var(--mono); font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--cyan); }
+  .meas__v small { font-size: 10.5px; color: var(--ink-faint); font-weight: 400; }
+
+  /* ---------- controls ---------- */
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field > .label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .field__read { color: var(--cyan); font-size: 11px; letter-spacing: .04em; }
+
+  select, input[type="number"], input[type="text"] {
+    width: 100%; background: var(--surface); color: var(--ink);
+    border: 1px solid var(--border-firm); border-radius: 7px;
+    padding: 8px 10px; font-size: 14px;
+  }
+  input[type="number"] { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  select { appearance: none; padding-right: 30px;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+    background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; cursor: pointer; }
+
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+  .swatch {
+    width: 26px; height: 26px; border-radius: 6px; cursor: pointer; padding: 0;
+    border: 1px solid var(--border-firm); position: relative; transition: transform .1s;
+  }
+  .swatch:hover { transform: scale(1.08); }
+  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+
+  .segbtns { display: flex; gap: 4px; }
+  .segbtns button {
+    flex: 1; background: var(--surface); border: 1px solid var(--border-firm);
+    border-radius: 7px; padding: 7px 4px; cursor: pointer;
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .segbtns button:hover { background: var(--surface-2); }
+  .segbtns button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  :root[data-theme="dark"] .segbtns button[aria-pressed="true"] { background: var(--accent); color: #14171A; border-color: var(--accent); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .segbtns button[aria-pressed="true"] { background: var(--accent); color: #14171A; border-color: var(--accent); } }
+
+  .check { display: flex; align-items: center; gap: 9px; font-size: 13.5px; cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+  .btn {
+    border: 1px solid var(--border-firm); background: var(--surface); color: var(--ink);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13.5px; font-weight: 600;
+    transition: background .12s, border-color .12s;
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn--sm { padding: 5px 10px; font-size: 12px; }
+  .btn--primary { background: var(--accent); border-color: var(--accent); color: #FFF; width: 100%; padding-block: 11px; font-size: 15px; }
+  :root[data-theme="dark"] .btn--primary { color: #14171A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn--primary { color: #14171A; } }
+  .btn--primary:hover { filter: brightness(1.07); background: var(--accent); }
+
+  /* ---------- quote ---------- */
+
+  .quote__total {
+    background: var(--ink); color: var(--surface);
+    padding: 15px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  }
+  :root[data-theme="dark"] .quote__total { background: var(--accent-soft); color: var(--ink); border-bottom: 1px solid var(--accent); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .quote__total { background: var(--accent-soft); color: var(--ink); border-bottom: 1px solid var(--accent); } }
+  .quote__total .label { color: currentColor; opacity: .65; }
+  .quote__big { font-family: var(--display); font-size: 38px; font-weight: 700; line-height: .95; font-variant-numeric: tabular-nums; }
+  .quote__big span { font-size: 18px; opacity: .6; margin-right: 3px; }
+  .quote__each { font-family: var(--mono); font-size: 11.5px; opacity: .7; text-align: right; }
+
+  .line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-block: 7px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .line:last-of-type { border-bottom: 0; }
+  .line__k { color: var(--ink-soft); }
+  .line__k em { font-style: normal; color: var(--ink-faint); font-size: 11.5px; font-family: var(--mono); display: block; }
+  .line__v { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .line--sum { border-top: 1px solid var(--border-firm); border-bottom: 0; margin-top: 3px; padding-top: 9px; font-weight: 600; }
+
+  .flag { border-radius: 8px; padding: 9px 12px; font-size: 12.5px; display: flex; gap: 8px; align-items: flex-start; }
+  .flag--warn { background: var(--warn-soft); color: var(--warn); }
+  .flag--bad  { background: var(--bad-soft);  color: var(--bad); }
+  .flag--good { background: var(--good-soft); color: var(--good); }
+  .flag--info { background: var(--cyan-soft); color: var(--cyan); }
+  .flag b { font-weight: 600; }
+
+  /* ---------- shop settings ---------- */
+
+  details.shop { margin-top: 16px; }
+  details.shop > summary {
+    cursor: pointer; list-style: none; padding: 11px 15px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-weight: 600; font-size: 14px; box-shadow: var(--shadow);
+  }
+  details.shop > summary::-webkit-details-marker { display: none; }
+  details.shop > summary::after { content: "＋"; font-family: var(--mono); color: var(--ink-faint); }
+  details.shop[open] > summary { border-radius: 12px 12px 0 0; border-bottom: 0; box-shadow: none; }
+  details.shop[open] > summary::after { content: "−"; }
+  .shop__body {
+    border: 1px solid var(--border); border-top: 1px solid var(--border); border-radius: 0 0 12px 12px;
+    background: var(--surface); padding: 15px; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+  }
+  .shop__note { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-soft); }
+
+  /* ---------- how it works ---------- */
+
+  .how { margin-top: 34px; }
+  .how h2 { font-size: 18px; margin-bottom: 4px; }
+  .how__lead { color: var(--ink-soft); font-size: 14px; max-width: 66ch; margin-bottom: 16px; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 14px; }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .step__n { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 600; }
+  .step h3 { font-size: 14.5px; font-family: var(--body); font-weight: 600; letter-spacing: 0; }
+  .step p { font-size: 13px; color: var(--ink-soft); }
+  .step code { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+
+  footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-faint); max-width: 70ch; }
+</style>
+
+<header>
+  <div class="logo">
+    <div class="logo__mark" aria-hidden="true">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round">
+        <path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5"/><path d="M12 12v10"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo__name">Instant Print Quote</div>
+      <div class="logo__tag">FDM · Filament · Malaysia</div>
+    </div>
+  </div>
+  <div class="header__spacer"></div>
+  <p class="header__note">Drop an STL and the browser measures it, slices the maths and prices the job. Nothing is uploaded — the file never leaves this device.</p>
+</header>
+
+<div class="wrap">
+  <div class="bench">
+
+    <!-- ---------- left: viewport + measurements ---------- -->
+    <div>
+      <div class="panel">
+        <div class="panel__head">
+          <span class="label">Model</span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn btn--sm" id="btn-sample">Load sample</button>
+            <button type="button" class="btn btn--sm" id="btn-file">Open STL…</button>
+          </div>
+        </div>
+        <div class="stage" id="stage">
+          <div class="drop">Release to measure</div>
+          <div class="stage__file" id="filename">sample-part.stl</div>
+          <div class="stage__hint">drag to rotate · scroll to zoom</div>
+        </div>
+        <div class="meas" id="meas"></div>
+      </div>
+
+      <details class="shop" id="shop">
+        <summary>Shop settings — your costs, your margin</summary>
+        <div class="shop__body">
+          <div class="field">
+            <label class="label" for="s-filament">Filament RM / kg</label>
+            <input type="number" id="s-filament" value="75" min="0" step="5">
+          </div>
+          <div class="field">
+            <label class="label" for="s-machine">Machine RM / hour</label>
+            <input type="number" id="s-machine" value="4.00" min="0" step="0.5">
+          </div>
+          <div class="field">
+            <label class="label" for="s-setup">Setup fee RM</label>
+            <input type="number" id="s-setup" value="5.00" min="0" step="1">
+          </div>
+          <div class="field">
+            <label class="label" for="s-margin">Margin %</label>
+            <input type="number" id="s-margin" value="35" min="0" step="5">
+          </div>
+          <div class="field">
+            <label class="label" for="s-min">Minimum order RM</label>
+            <input type="number" id="s-min" value="15" min="0" step="1">
+          </div>
+          <div class="field">
+            <label class="label" for="s-fail">Failure allowance %</label>
+            <input type="number" id="s-fail" value="8" min="0" step="1">
+          </div>
+          <p class="shop__note">These are the only numbers a shop owner ever needs to touch. Filament price overrides the per-material default; set it to 0 to use the material's own price.</p>
+        </div>
+      </details>
+
+      <section class="how">
+        <h2>How the number is worked out</h2>
+        <p class="how__lead">No slicer, no server, no upload. The page reads the triangle mesh directly and does the arithmetic a slicer would do — which is why the estimate appears the moment you drop the file.</p>
+        <div class="steps">
+          <div class="step">
+            <span class="step__n">Step 1</span>
+            <h3>Measure the mesh</h3>
+            <p>Solid volume comes from the signed volume of every triangle's tetrahedron to the origin; surface area from the cross product of each triangle's edges. Bounding box gives the footprint.</p>
+          </div>
+          <div class="step">
+            <span class="step__n">Step 2</span>
+            <h3>Work out what is actually extruded</h3>
+            <p>A print is not solid. Shell is <code>area × walls × line width</code>; the interior left over is multiplied by the infill density. Together that is the extruded volume.</p>
+          </div>
+          <div class="step">
+            <span class="step__n">Step 3</span>
+            <h3>Convert to grams and hours</h3>
+            <p>Grams is extruded volume × the material's density. Time comes from volumetric flow — <code>layer × line width × speed</code> — derated for acceleration and travel, plus a per-layer change cost.</p>
+          </div>
+          <div class="step">
+            <span class="step__n">Step 4</span>
+            <h3>Price it like a shop</h3>
+            <p>Filament at your RM/kg, machine time at your hourly rate, a setup fee, a failure allowance for reprints, then margin. Minimum order applies last.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Estimates, not slicer output. Real print time depends on geometry, supports, cooling and how the part is oriented on the plate — a tall thin part with the same volume as a flat one will take considerably longer. Treat the figure as a quote to confirm, which is exactly how a shop uses it. Filament densities are manufacturer nominal values; RM prices are Malaysian retail as of September 2026 and are meant to be edited in shop settings.
+      </footer>
+    </div>
+
+    <!-- ---------- right: settings + quote ---------- -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <div class="panel">
+        <div class="panel__head"><span class="label">Print settings</span></div>
+        <div class="panel__body">
+
+          <div class="field">
+            <label class="label" for="printer">Printer / build plate</label>
+            <select id="printer"></select>
+          </div>
+
+          <div class="field">
+            <label class="label" for="material">Material</label>
+            <select id="material"></select>
+          </div>
+
+          <div class="field">
+            <span class="label">Filament colour</span>
+            <div class="swatches" id="swatches"></div>
+          </div>
+
+          <div class="field">
+            <span class="label">Layer height</span>
+            <div class="segbtns" id="layers"></div>
+          </div>
+
+          <div class="field">
+            <span class="label" id="lbl-infill">Infill <span class="field__read" id="read-infill">20%</span></span>
+            <input type="range" id="infill" min="0" max="100" step="5" value="20" aria-labelledby="lbl-infill">
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label class="label" for="walls">Wall loops</label>
+              <input type="number" id="walls" value="2" min="1" max="8" step="1">
+            </div>
+            <div class="field">
+              <label class="label" for="qty">Quantity</label>
+              <input type="number" id="qty" value="1" min="1" max="999" step="1">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="units">File units <span class="field__read">STL stores no unit</span></label>
+            <select id="units">
+              <option value="1" selected>Millimetres</option>
+              <option value="10">Centimetres</option>
+              <option value="25.4">Inches</option>
+            </select>
+          </div>
+
+          <label class="check"><input type="checkbox" id="supports"> Needs support material</label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="quote__total">
+          <div>
+            <span class="label">Total</span>
+            <div class="quote__big" id="q-total"><span>RM</span>0.00</div>
+          </div>
+          <div class="quote__each" id="q-each"></div>
+        </div>
+        <div class="panel__body" id="q-body"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file" accept=".stl,model/stl,application/sla" hidden>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. STL parsing — written here rather than pulled from a
+   loader library, because the format is small and this way
+   nothing external can fail to load.
+   ============================================================ */
+
+function parseSTL(buffer) {
+  const view = new DataView(buffer);
+  // A binary STL is 84 bytes of header plus exactly 50 bytes per triangle.
+  // Checking that arithmetic is more reliable than sniffing for "solid",
+  // because plenty of binary files start with that word too.
+  if (buffer.byteLength >= 84) {
+    const tris = view.getUint32(80, true);
+    if (84 + tris * 50 === buffer.byteLength) return parseBinary(view, tris);
+  }
+  return parseASCII(new TextDecoder().decode(buffer));
+}
+
+function parseBinary(view, tris) {
+  const pos = new Float32Array(tris * 9);
+  let o = 84, p = 0;
+  for (let i = 0; i < tris; i++) {
+    o += 12; // skip the stored face normal; we recompute from winding
+    for (let v = 0; v < 9; v++) { pos[p++] = view.getFloat32(o, true); o += 4; }
+    o += 2;  // attribute byte count
+  }
+  return pos;
+}
+
+function parseASCII(text) {
+  const nums = [];
+  const re = /vertex\s+(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    nums.push(parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3]));
+  }
+  if (nums.length < 9) throw new Error("No triangles found in this file.");
+  return new Float32Array(nums);
+}
+
+/* ============================================================
+   2. Mesh measurement
+   ============================================================ */
+
+function measure(pos, scale) {
+  let vol = 0, area = 0;
+  let minX = Infinity, minY = Infinity, minZ = Infinity;
+  let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+
+  for (let i = 0; i < pos.length; i += 9) {
+    const ax = pos[i] * scale,     ay = pos[i + 1] * scale, az = pos[i + 2] * scale;
+    const bx = pos[i + 3] * scale, by = pos[i + 4] * scale, bz = pos[i + 5] * scale;
+    const cx = pos[i + 6] * scale, cy = pos[i + 7] * scale, cz = pos[i + 8] * scale;
+
+    // Signed volume of the tetrahedron (origin, a, b, c). Summed over a
+    // closed mesh these cancel out to the enclosed volume.
+    vol += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6;
+
+    // Triangle area = half the magnitude of the edge cross product.
+    const e1x = bx - ax, e1y = by - ay, e1z = bz - az;
+    const e2x = cx - ax, e2y = cy - ay, e2z = cz - az;
+    const nx = e1y * e2z - e1z * e2y;
+    const ny = e1z * e2x - e1x * e2z;
+    const nz = e1x * e2y - e1y * e2x;
+    area += Math.sqrt(nx * nx + ny * ny + nz * nz) / 2;
+
+    minX = Math.min(minX, ax, bx, cx); maxX = Math.max(maxX, ax, bx, cx);
+    minY = Math.min(minY, ay, by, cy); maxY = Math.max(maxY, ay, by, cy);
+    minZ = Math.min(minZ, az, bz, cz); maxZ = Math.max(maxZ, az, bz, cz);
+  }
+
+  return {
+    volume: Math.abs(vol),                 // mm³
+    area,                                  // mm²
+    tris: pos.length / 9,
+    size: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
+    min: { x: minX, y: minY, z: minZ },
+    max: { x: maxX, y: maxY, z: maxZ }
+  };
+}
+
+/* ============================================================
+   3. Shop data
+   ============================================================ */
+
+const MATERIALS = {
+  pla:  { name: "PLA",  density: 1.24, rmkg: 75,  maxFlow: 1.00, note: "Everyday parts, prototypes, display pieces." },
+  petg: { name: "PETG", density: 1.27, rmkg: 88,  maxFlow: 0.80, note: "Tougher and water-resistant. Slower to print." },
+  abs:  { name: "ABS",  density: 1.04, rmkg: 82,  maxFlow: 0.85, note: "Heat resistant. Needs an enclosure." },
+  asa:  { name: "ASA",  density: 1.07, rmkg: 105, maxFlow: 0.85, note: "UV stable — the one for outdoor parts." },
+  tpu:  { name: "TPU 95A", density: 1.21, rmkg: 145, maxFlow: 0.45, note: "Flexible. Prints slowly and cannot be rushed." }
+};
+
+const PRINTERS = {
+  a1mini: { name: "Bambu Lab A1 mini", x: 180, y: 180, z: 180, speed: 240 },
+  a1:     { name: "Bambu Lab A1",      x: 256, y: 256, z: 256, speed: 300 },
+  p1s:    { name: "Bambu Lab P1S",     x: 256, y: 256, z: 256, speed: 400 },
+  x1c:    { name: "Bambu Lab X1 Carbon", x: 256, y: 256, z: 256, speed: 500 }
+};
+
+const COLOURS = [
+  { name: "Black",       hex: "#1A1A1A" },
+  { name: "White",       hex: "#F2F2F0" },
+  { name: "Bambu Green", hex: "#00AE42" },
+  { name: "Orange",      hex: "#FF6A13" },
+  { name: "Red",         hex: "#C8102E" },
+  { name: "Blue",        hex: "#0A5EB0" },
+  { name: "Yellow",      hex: "#F4C300" },
+  { name: "Silver",      hex: "#A7ADB5" }
+];
+
+const LAYERS = [0.12, 0.16, 0.20, 0.24, 0.28];
+
+const NOZZLE = 0.4;      // mm
+const LINE_WIDTH = 0.42; // mm — a 0.4 nozzle lays a slightly wider line
+const FLOW_EFF = 0.42;   // derate for acceleration, travel moves and cooling
+const LAYER_CHANGE = 0.55; // seconds lost per layer
+const STARTUP = 240;     // seconds: heat up, level, purge line
+
+/* ============================================================
+   4. State
+   ============================================================ */
+
+const state = {
+  pos: null,
+  m: null,
+  filename: "sample-part.stl",
+  printer: "a1",
+  material: "pla",
+  colour: 2,
+  layer: 0.20,
+  infill: 20,
+  walls: 2,
+  qty: 1,
+  units: 1,
+  supports: false,
+  shop: { filament: 75, machine: 4, setup: 5, margin: 35, min: 15, fail: 8 }
+};
+
+const $ = (s) => document.querySelector(s);
+const fmt = (n, d = 2) => n.toLocaleString("en-MY", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function hhmm(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.round((sec % 3600) / 60);
+  if (h === 0) return m + " min";
+  return h + " h " + String(m).padStart(2, "0") + " min";
+}
+
+/* ============================================================
+   5. The quote
+   ============================================================ */
+
+function quote() {
+  const m = state.m;
+  const mat = MATERIALS[state.material];
+  const pr = PRINTERS[state.printer];
+  const s = state.shop;
+
+  // --- what is actually extruded ---------------------------------
+  const shellThickness = state.walls * LINE_WIDTH;
+  // Surface area × wall thickness approximates the perimeter shell plus
+  // the solid top and bottom skins. Clamp it: on a thin part the shell
+  // is the whole part, and it can never exceed the solid volume.
+  const shellVol = Math.min(m.area * shellThickness, m.volume);
+  const interior = Math.max(0, m.volume - shellVol);
+  const infillVol = interior * (state.infill / 100);
+  let extruded = shellVol + infillVol;
+
+  // Supports are printed sparse — roughly 12% of the part's own volume
+  // for a part that needs them at all.
+  const supportVol = state.supports ? m.volume * 0.12 : 0;
+  extruded += supportVol;
+
+  const grams = (extruded / 1000) * mat.density;   // mm³ → cm³ → g
+
+  // --- time -------------------------------------------------------
+  // Volumetric flow the machine sustains at this layer height, capped by
+  // what the material can be pushed at.
+  const flow = state.layer * LINE_WIDTH * pr.speed * FLOW_EFF * mat.maxFlow; // mm³/s
+  const layers = Math.max(1, Math.ceil(m.size.z / state.layer));
+  const seconds = extruded / flow + layers * LAYER_CHANGE + STARTUP;
+
+  // --- money ------------------------------------------------------
+  const rmkg = s.filament > 0 ? s.filament : mat.rmkg;
+  const matCost = (grams / 1000) * rmkg;
+  const timeCost = (seconds / 3600) * s.machine;
+  const subtotal = matCost + timeCost;
+  const failCost = subtotal * (s.fail / 100);
+  const beforeMargin = subtotal + failCost;
+  const margin = beforeMargin * (s.margin / 100);
+  const unit = beforeMargin + margin;
+
+  let total = unit * state.qty + s.setup;
+  const belowMin = total < s.min;
+  if (belowMin) total = s.min;
+
+  // --- fit --------------------------------------------------------
+  const fitsFlat = m.size.x <= pr.x && m.size.y <= pr.y && m.size.z <= pr.z;
+  const fitsTurned = m.size.y <= pr.x && m.size.x <= pr.y && m.size.z <= pr.z;
+
+  return { mat, pr, shellVol, infillVol, supportVol, extruded, grams, seconds, layers,
+           flow, matCost, timeCost, failCost, margin, unit, total, belowMin,
+           fits: fitsFlat || fitsTurned, fitsFlat, rmkg };
+}
+
+/* ============================================================
+   6. Rendering the page
+   ============================================================ */
+
+function renderMeasurements() {
+  const m = state.m;
+  $("#meas").innerHTML = `
+    <div><span class="label">Volume</span><span class="meas__v">${fmt(m.volume / 1000, 1)} <small>cm³</small></span></div>
+    <div><span class="label">Bounding box</span><span class="meas__v">${fmt(m.size.x, 0)}×${fmt(m.size.y, 0)}×${fmt(m.size.z, 0)} <small>mm</small></span></div>
+    <div><span class="label">Surface</span><span class="meas__v">${fmt(m.area / 100, 0)} <small>cm²</small></span></div>
+    <div><span class="label">Triangles</span><span class="meas__v">${m.tris.toLocaleString("en-MY")}</span></div>`;
+}
+
+function renderQuote() {
+  const q = quote();
+  const m = state.m;
+
+  $("#q-total").innerHTML = `<span>RM</span>${fmt(q.total)}`;
+  $("#q-each").innerHTML = state.qty > 1
+    ? `${state.qty} × RM${fmt(q.unit)}<br>each`
+    : `${hhmm(q.seconds)}<br>${fmt(q.grams, 0)} g`;
+
+  const flags = [];
+  if (!q.fits) {
+    flags.push(`<div class="flag flag--bad"><b>Too large.</b> ${fmt(m.size.x, 0)}×${fmt(m.size.y, 0)}×${fmt(m.size.z, 0)} mm will not fit the ${q.pr.name}'s ${q.pr.x}×${q.pr.y}×${q.pr.z} mm plate. It would need splitting.</div>`);
+  } else if (!q.fitsFlat) {
+    flags.push(`<div class="flag flag--warn"><b>Fits, but only rotated 90°</b> on the plate.</div>`);
+  }
+  if (q.belowMin) {
+    flags.push(`<div class="flag flag--info">Priced at the RM${fmt(state.shop.min, 0)} minimum order — the job itself works out cheaper.</div>`);
+  }
+  if (state.material === "tpu" && state.layer < 0.2) {
+    flags.push(`<div class="flag flag--warn">TPU at ${state.layer} mm layers will be slow and prone to under-extrusion. 0.20 mm or thicker is safer.</div>`);
+  }
+  if (m.size.z > 150) {
+    flags.push(`<div class="flag flag--warn"><b>${fmt(m.size.z, 0)} mm tall.</b> Tall parts fail more often — this quote already carries a ${state.shop.fail}% failure allowance.</div>`);
+  }
+
+  $("#q-body").innerHTML = flags.join("") + `
+    <div>
+      <div class="line"><span class="line__k">Solid volume<em>measured from the mesh</em></span><span class="line__v">${fmt(m.volume / 1000, 1)} cm³</span></div>
+      <div class="line"><span class="line__k">Shell<em>${state.walls} walls × ${LINE_WIDTH} mm line</em></span><span class="line__v">${fmt(q.shellVol / 1000, 1)} cm³</span></div>
+      <div class="line"><span class="line__k">Infill<em>${state.infill}% of what is left inside</em></span><span class="line__v">${fmt(q.infillVol / 1000, 1)} cm³</span></div>
+      ${state.supports ? `<div class="line"><span class="line__k">Supports<em>sparse, discarded after</em></span><span class="line__v">${fmt(q.supportVol / 1000, 1)} cm³</span></div>` : ""}
+      <div class="line line--sum"><span class="line__k">Filament extruded</span><span class="line__v">${fmt(q.extruded / 1000, 1)} cm³ · ${fmt(q.grams, 1)} g</span></div>
+    </div>
+
+    <div>
+      <div class="line"><span class="line__k">Print time<em>${fmt(q.flow, 1)} mm³/s over ${q.layers.toLocaleString("en-MY")} layers</em></span><span class="line__v">${hhmm(q.seconds)}</span></div>
+    </div>
+
+    <div>
+      <div class="line"><span class="line__k">Filament<em>${fmt(q.grams, 1)} g at RM${fmt(q.rmkg, 0)}/kg</em></span><span class="line__v">RM ${fmt(q.matCost)}</span></div>
+      <div class="line"><span class="line__k">Machine time<em>RM${fmt(state.shop.machine)}/hour</em></span><span class="line__v">RM ${fmt(q.timeCost)}</span></div>
+      <div class="line"><span class="line__k">Failure allowance<em>${state.shop.fail}% for reprints</em></span><span class="line__v">RM ${fmt(q.failCost)}</span></div>
+      <div class="line"><span class="line__k">Margin<em>${state.shop.margin}%</em></span><span class="line__v">RM ${fmt(q.margin)}</span></div>
+      <div class="line line--sum"><span class="line__k">Per part</span><span class="line__v">RM ${fmt(q.unit)}</span></div>
+      ${state.qty > 1 ? `<div class="line"><span class="line__k">× ${state.qty} parts</span><span class="line__v">RM ${fmt(q.unit * state.qty)}</span></div>` : ""}
+      <div class="line"><span class="line__k">Setup fee<em>file prep, plate change, cleanup</em></span><span class="line__v">RM ${fmt(state.shop.setup)}</span></div>
+    </div>
+
+    <button type="button" class="btn btn--primary" id="btn-order">Request this print — RM ${fmt(q.total)}</button>
+    <p style="font-size:12px;color:var(--ink-faint)">${MATERIALS[state.material].note}</p>`;
+}
+
+function refresh() {
+  if (!state.pos) return;
+  state.m = measure(state.pos, state.units);
+  renderMeasurements();
+  renderQuote();
+  view.setModel(state.pos, state.units);
+}
+
+/* ============================================================
+   7. Three.js viewport
+   ============================================================ */
+
+const view = (function () {
+  const stage = $("#stage");
+  // alpha so the themed --viewport colour behind the canvas shows through,
+  // which keeps the stage correct in both light and dark without redrawing.
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.5, 6000);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 0.85); key.position.set(1, 1.6, 1.1); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.32); rim.position.set(-1.2, 0.5, -1); scene.add(rim);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  let mesh = null;
+  let grid = null;
+  let plate = null;
+  let radius = 100;
+  let dist = 300;
+  let spin = true;
+  let rotY = -0.6;
+  let pitch = 0.42; // camera elevation in radians — the part never leaves the plate
+
+  function setPlate() {
+    const pr = PRINTERS[state.printer];
+    if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    if (plate) { scene.remove(plate); plate.geometry.dispose(); plate.material.dispose(); }
+
+    const size = Math.max(pr.x, pr.y);
+    grid = new THREE.GridHelper(size, Math.round(size / 20), 0x6b7a84, 0x3d4a52);
+    grid.position.y = 0;
+    scene.add(grid);
+
+    plate = new THREE.Mesh(
+      new THREE.PlaneGeometry(pr.x, pr.y),
+      new THREE.MeshBasicMaterial({ color: 0x2a3238, transparent: true, opacity: 0.55 })
+    );
+    plate.rotation.x = -Math.PI / 2;
+    plate.position.y = -0.4;
+    scene.add(plate);
+  }
+
+  function setModel(pos, scale) {
+    if (mesh) { group.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
+
+    const g = new THREE.BufferGeometry();
+    const scaled = new Float32Array(pos.length);
+    for (let i = 0; i < pos.length; i++) scaled[i] = pos[i] * scale;
+    g.setAttribute("position", new THREE.BufferAttribute(scaled, 3));
+    g.computeVertexNormals();
+    g.computeBoundingBox();
+
+    // Centre on the plate in X/Y, and rest the lowest point on Z = 0,
+    // so the part sits on the build plate the way it will actually print.
+    const b = g.boundingBox;
+    g.translate(-(b.min.x + b.max.x) / 2, -(b.min.y + b.max.y) / 2, -b.min.z);
+    g.computeBoundingSphere();
+    radius = g.boundingSphere.radius || 50;
+
+    mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({
+      color: new THREE.Color(COLOURS[state.colour].hex),
+      roughness: 0.62, metalness: 0.06, flatShading: false
+    }));
+    mesh.rotation.x = -Math.PI / 2; // STL is Z-up; the scene is Y-up
+    group.add(mesh);
+
+    dist = Math.max(radius * 3.1, 90);
+    setPlate();
+  }
+
+  function setColour() {
+    if (mesh) mesh.material.color.set(COLOURS[state.colour].hex);
+  }
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+
+  function loop() {
+    requestAnimationFrame(loop);
+    if (spin) rotY += 0.0042;
+    group.rotation.y = rotY;
+
+    // Orbit the camera instead of tilting the model, so the part stays
+    // sitting on the build plate however you drag it.
+    const target = radius * 0.55;
+    camera.position.set(0, target + dist * Math.sin(pitch), dist * Math.cos(pitch));
+    camera.lookAt(0, target, 0);
+    renderer.render(scene, camera);
+  }
+
+  // --- pointer control ---
+  let dragging = false, lx = 0, ly = 0;
+  const el = renderer.domElement;
+  el.addEventListener("pointerdown", (e) => {
+    dragging = true; spin = false; lx = e.clientX; ly = e.clientY;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    rotY += (e.clientX - lx) * 0.009;
+    pitch = Math.max(0.04, Math.min(1.45, pitch + (e.clientY - ly) * 0.006));
+    lx = e.clientX; ly = e.clientY;
+  });
+  el.addEventListener("pointerup", (e) => { dragging = false; el.releasePointerCapture(e.pointerId); });
+  el.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    dist = Math.max(radius * 1.3, Math.min(radius * 9, dist * (1 + Math.sign(e.deltaY) * 0.12)));
+  }, { passive: false });
+
+  window.addEventListener("resize", resize);
+  setPlate();
+  resize();
+  loop();
+
+  return { setModel, setColour, setPlate, resize };
+})();
+
+/* ============================================================
+   8. Sample part — a torus knot, the classic bench test for
+   overhangs and bridging. Generated so the page opens with a
+   real measurement rather than an empty box.
+   ============================================================ */
+
+function sampleSTL() {
+  const g = new THREE.TorusKnotGeometry(38, 12, 160, 26);
+  g.rotateX(Math.PI / 2);
+  const p = g.attributes.position.array;
+  const idx = g.index.array;
+  const out = new Float32Array(idx.length * 3);
+  for (let i = 0; i < idx.length; i++) {
+    out[i * 3]     = p[idx[i] * 3];
+    out[i * 3 + 1] = p[idx[i] * 3 + 1];
+    out[i * 3 + 2] = p[idx[i] * 3 + 2];
+  }
+  g.dispose();
+  return out;
+}
+
+/* ============================================================
+   9. Controls
+   ============================================================ */
+
+function buildControls() {
+  $("#printer").innerHTML = Object.entries(PRINTERS)
+    .map(([k, v]) => `<option value="${k}"${k === state.printer ? " selected" : ""}>${v.name} — ${v.x}×${v.y}×${v.z} mm</option>`).join("");
+
+  $("#material").innerHTML = Object.entries(MATERIALS)
+    .map(([k, v]) => `<option value="${k}"${k === state.material ? " selected" : ""}>${v.name} — ${v.density} g/cm³</option>`).join("");
+
+  $("#swatches").innerHTML = COLOURS.map((c, i) =>
+    `<button type="button" class="swatch" data-colour="${i}" title="${c.name}" aria-label="${c.name}"
+      aria-pressed="${i === state.colour}" style="background:${c.hex}"></button>`).join("");
+
+  $("#layers").innerHTML = LAYERS.map((l) =>
+    `<button type="button" data-layer="${l}" aria-pressed="${l === state.layer}">${l.toFixed(2)}</button>`).join("");
+}
+
+function bind() {
+  $("#printer").addEventListener("change", (e) => { state.printer = e.target.value; view.setPlate(); refresh(); });
+  $("#material").addEventListener("change", (e) => { state.material = e.target.value; refresh(); });
+  $("#infill").addEventListener("input", (e) => {
+    state.infill = +e.target.value;
+    $("#read-infill").textContent = state.infill + "%";
+    refresh();
+  });
+  $("#walls").addEventListener("input", (e) => { state.walls = Math.max(1, +e.target.value || 1); refresh(); });
+  $("#qty").addEventListener("input", (e) => { state.qty = Math.max(1, +e.target.value || 1); refresh(); });
+  $("#units").addEventListener("change", (e) => { state.units = +e.target.value; refresh(); });
+  $("#supports").addEventListener("change", (e) => { state.supports = e.target.checked; refresh(); });
+
+  document.addEventListener("click", (e) => {
+    const sw = e.target.closest("[data-colour]");
+    if (sw) {
+      state.colour = +sw.dataset.colour;
+      document.querySelectorAll("[data-colour]").forEach((b) =>
+        b.setAttribute("aria-pressed", String(+b.dataset.colour === state.colour)));
+      view.setColour();
+      return;
+    }
+    const ly = e.target.closest("[data-layer]");
+    if (ly) {
+      state.layer = +ly.dataset.layer;
+      document.querySelectorAll("[data-layer]").forEach((b) =>
+        b.setAttribute("aria-pressed", String(+b.dataset.layer === state.layer)));
+      refresh();
+      return;
+    }
+    if (e.target.id === "btn-order") {
+      e.target.textContent = "Sent — the shop will confirm within a day";
+      e.target.disabled = true;
+      return;
+    }
+    if (e.target.id === "btn-file") { $("#file").click(); return; }
+    if (e.target.id === "btn-sample") { loadSample(); }
+  });
+
+  ["filament", "machine", "setup", "margin", "min", "fail"].forEach((k) => {
+    $("#s-" + k).addEventListener("input", (e) => {
+      state.shop[k] = Math.max(0, parseFloat(e.target.value) || 0);
+      refresh();
+    });
+  });
+
+  $("#file").addEventListener("change", (e) => {
+    if (e.target.files[0]) readFile(e.target.files[0]);
+  });
+
+  const stage = $("#stage");
+  ["dragenter", "dragover"].forEach((t) =>
+    stage.addEventListener(t, (e) => { e.preventDefault(); stage.classList.add("is-over"); }));
+  ["dragleave", "drop"].forEach((t) =>
+    stage.addEventListener(t, (e) => { e.preventDefault(); stage.classList.remove("is-over"); }));
+  stage.addEventListener("drop", (e) => {
+    const f = e.dataTransfer.files[0];
+    if (f) readFile(f);
+  });
+  // Without this the browser navigates away when a file is dropped near the page.
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => e.preventDefault());
+}
+
+function showError(msg) {
+  const old = document.querySelector(".stage__err");
+  if (old) old.remove();
+  const el = document.createElement("div");
+  el.className = "stage__err";
+  el.setAttribute("role", "alert");
+  el.textContent = msg;
+  $("#stage").appendChild(el);
+  setTimeout(() => el.remove(), 6000);
+}
+
+function readFile(file) {
+  if (!/\.stl$/i.test(file.name)) {
+    showError("That is not an STL. Export your model as STL from Blender, Fusion or TinkerCAD and try again.");
+    return;
+  }
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const pos = parseSTL(r.result);
+      if (!pos.length) throw new Error("empty");
+      state.pos = pos;
+      state.filename = file.name;
+      $("#filename").textContent = file.name + "  ·  " + (file.size / 1024 / 1024).toFixed(2) + " MB";
+      refresh();
+    } catch (err) {
+      showError("Could not read that STL — it may be damaged or an unsupported variant.");
+    }
+  };
+  r.onerror = () => showError("The file could not be opened.");
+  r.readAsArrayBuffer(file);
+}
+
+function loadSample() {
+  state.pos = sampleSTL();
+  state.filename = "sample-part.stl";
+  $("#filename").textContent = "sample-part.stl  ·  torus knot benchmark";
+  refresh();
+}
+
+buildControls();
+bind();
+loadSample();
+window.addEventListener("load", () => view.resize());
+</script>
