@@ -26,3 +26,6 @@ build/
 /test-models/
 *.stl
 !/samples/*.stl
+
+# Project record: built locally, kept private
+docs/index.html
